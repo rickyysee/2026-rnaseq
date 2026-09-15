@@ -1,0 +1,9 @@
+# ignore all files
+*
+
+# include certain files
+!README.md
+!.gitignore
+!Snakefile
+!*.yaml
+
