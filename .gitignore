@@ -7,4 +7,5 @@
 !Snakefile
 !envs
 !envs/*.yaml
-
+!mapping.sh
+!index.sh
