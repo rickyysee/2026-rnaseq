@@ -1,11 +1,19 @@
-# ------------------------------------------------------------------
-# QC + Adapter/Quality Trimming Pipeline for Paired-End FASTQ Data
-#
-# steps: FastQC (raw) -> fastp (trim) -> FastQC (trimmed) -> MultiQC
-#
-# requirements: conda, snakemake
-# ------------------------------------------------------------------
+"""
+QC + Adapter/Quality Trimming Pipeline for Paired-End FASTQ Data
 
+steps: FastQC (raw) -> fastp (trim) -> MultiQC
+
+requirements: conda, snakemake
+"""
+
+# handle emailing if specified
+# --config email='youremail@domain.tld'
+EMAIL = config.get('email', None)
+if EMAIL:
+	onsuccess: shell("sed '/^$/q' {log} | mail -s 'Pipeline SUCCESS' {email}")
+	onerror:   shell("sed '/^$/q' {log} | mail -s 'Pipeline FAILURE' {email}")
+
+# search fastq directory all fastq files
 SAMPLES,RUNS = glob_wildcards('fastq/{fastq}_{run}.fastq.gz')
 
 # SAMPLES = ['19_Aalb_leg_NBF_rep1']
