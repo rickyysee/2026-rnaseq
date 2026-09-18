@@ -1,0 +1,8 @@
+name: snakemake
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - snakemake-minimal=9.26.1
+  - graphviz=14.1.2
