@@ -5,9 +5,5 @@
 !README.md
 !.gitignore
 !Snakefile
-!envs
-!envs/*.yaml
-!mapping.sh
-!index.sh
+!envs/
 !scripts/
-!scripts/*

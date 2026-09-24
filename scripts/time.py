@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # calculate the average mapping time in a given STAR log file
 
 from datetime import datetime
