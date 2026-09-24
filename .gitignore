@@ -9,4 +9,5 @@
 !envs/*.yaml
 !mapping.sh
 !index.sh
-!*.py
+!scripts/
+!scripts/*
