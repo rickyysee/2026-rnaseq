@@ -6,4 +6,6 @@
 !.gitignore
 !Snakefile
 !envs/
+!envs/*
 !scripts/
+!scripts/*
