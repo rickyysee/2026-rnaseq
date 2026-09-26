@@ -16,6 +16,9 @@ file = args.input
 
 df = pd.read_csv(file, sep='\t', index_col=0)
 
+# remove the any columns without data (due to erroneous reading)
+df = pd.DataFrame.dropna(df, axis='columns', how='all')
+
 # convert percent-strings to floats
 percent_cols = set()
 for col in df.columns:
