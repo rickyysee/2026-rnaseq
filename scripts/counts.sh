@@ -4,8 +4,8 @@
 
 # CONFIG
 OUTDIR=counting
-# use same GFF as used by STAR to index
-GFF=AalbF5/AalbF5_whole.gff
+# use same GFF/GTF as used by STAR to index
+GFILE=AalbF5/AalbF5_whole.gff
 STRAND=2
 THREADS=4
 
@@ -24,7 +24,7 @@ printf ' %s\n' "${BAMS[@]}"
 
 # run featureCounts and make one count table
 mkdir -p "$OUTDIR"
-featureCounts -T "$THREADS" -p --countReadPairs -s "$STRAND" -a "$GFF" \
--t exon -g gene_id -o "$OUTDIR/counts.txt" \
+featureCounts -T "$THREADS" -p --countReadPairs -s "$STRAND" -a "$GFILE" \
+-t exon -g ID -o "$OUTDIR/counts.txt" \
 "${BAMS[@]}" \
-2> "$OUTDIR/featureCounts.log"
+2> "$OUTDIR"/featureCounts.log
