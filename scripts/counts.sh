@@ -13,7 +13,7 @@ THREADS=4
 BAMS=( ./mapping/*/Aligned.sortedByCoord.out.bam )
 
 # if no files were found, exit
-if [[ ! -e "${BAMS[@]}" ]]; then
+if [[ ! -e "${BAMS[0]}" ]]; then
 	echo "ERROR: no BAM files found" >&2
 	exit 1
 fi
