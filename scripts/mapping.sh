@@ -37,7 +37,7 @@ for f_file in "${FASTQ_DIR}/${TEST}"*_1.fastq.gz; do
 	# run the STAR aligner
 	# output to OUT_DIR and make new directory per sample
 	mkdir -p "${OUT_DIR}/${sample}"
-	STAR --runMode alignReads --GENOME_DIR "$GENOME_DIR" \
+	STAR --runMode alignReads --genomeDir "$GENOME_DIR" \
 	--readFilesIn "$f_file" "$r_file" \
 	--readFilesCommand zcat --outSAMtype BAM SortedByCoordinate \
 	--outFileNamePrefix "${OUT_DIR}/${sample}/" \
