@@ -23,6 +23,7 @@ echo "Found ${#BAMS[@]} BAM files"
 printf ' %s\n' "${BAMS[@]}"
 
 # run featureCounts and make one count table
+mkdir -p "$OUTDIR"
 featureCounts -T "$THREADS" -p --countReadPairs -s "$STRAND" -a "$GFF" \
 -t exon -g gene_id -o "$OUTDIR/counts.txt" \
 "${BAMS[@]}" \
