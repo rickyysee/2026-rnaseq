@@ -41,9 +41,8 @@ for f_file in "${FASTQ_DIR}/${TEST}"*_1.fastq.gz; do
 	--readFilesIn "$f_file" "$r_file" \
 	--readFilesCommand zcat --outSAMtype BAM SortedByCoordinate \
 	--outFileNamePrefix "${OUT_DIR}/${sample}/" \
-	--runThreadN "$THREADS" \
-	2> "${OUT_DIR}/${sample}/stderr.log"
-
+	--runThreadN "$THREADS"
+	
 	echo "---"
 done
 
