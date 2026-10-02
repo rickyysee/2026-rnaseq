@@ -14,7 +14,7 @@ if EMAIL:
 	onerror:   shell("sed '/^$/q' {log} | mail -s 'Pipeline FAILURE' {email}")
 
 # search fastq directory all fastq files
-SAMPLES,RUNS = glob_wildcards('fastq/{fastq}_{run}.fastq.gz')
+SAMPLES,RUNS = glob_wildcards('raw_fastq/{fastq}_{run}.fastq.gz')
 
 # SAMPLES = ['19_Aalb_leg_NBF_rep1']
 

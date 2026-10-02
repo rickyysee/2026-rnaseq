@@ -5,6 +5,7 @@
 !README.md
 !.gitignore
 !Snakefile
+!*.smk
 !envs/
 !envs/*
 !scripts/
