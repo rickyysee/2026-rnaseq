@@ -6,6 +6,7 @@
 !.gitignore
 !Snakefile
 !*.smk
+!config.yaml
 !envs/
 !envs/*
 !scripts/

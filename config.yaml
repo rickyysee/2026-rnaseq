@@ -1,0 +1,17 @@
+# overall computation parameters
+THREADS: 4
+
+# genome directory and files
+GENOME_DIR: 'AalbF5'
+GENOME_FNA: 'AalbF5_whole.fna'
+GENOME_GFF: 'AalbF5_whole.gff'
+
+# directories for initial quality assessment
+INPUT_DIR: 'raw-fastq'
+FASTQC_OUT: 'fastqc'
+FASTP_OUT: 'fastp'
+MULTIQC_OUT: 'multiqc'
+
+# directories for mapping and transcriptome assembly
+STAR_OUT: 'mapping'
+TRINITY_OUT: 'transcriptome'

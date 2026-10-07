@@ -6,6 +6,15 @@ steps: FastQC (raw) -> fastp (trim) -> MultiQC
 requirements: conda, snakemake
 """
 
+import os
+import sys
+configfile: 'config.yaml'
+
+# import configuration variables
+INPUT  = config['INPUT_DIR']
+FASTQC = config['FASTQC_OUT']
+FASTP  = config['FASTP_OUT']
+
 # handle emailing if specified
 # --config email='youremail@domain.tld'
 EMAIL = config.get('email', None)
@@ -14,26 +23,27 @@ if EMAIL:
 	onerror:   shell("sed '/^$/q' {log} | mail -s 'Pipeline FAILURE' {email}")
 
 # search fastq directory all fastq files
-SAMPLES,RUNS = glob_wildcards('raw_fastq/{fastq}_{run}.fastq.gz')
-
+SAMPLES, RUNS = glob_wildcards(os.path.join(INPUT, '{sample}_{run}.fastq.gz'))
 # SAMPLES = ['19_Aalb_leg_NBF_rep1']
+RUNS = set(RUNS)
+RUNS = list(RUNS)
+RUNS.sort()
 
-RUNS = ['1', '2']
-# print(SAMPLES, RUNS)
+###
 
 rule all:
 	input:
-		fastqc = expand('fastqc/{fastq}_{run}_fastqc.html', fastq=SAMPLES, run=RUNS),
-		fastp  = expand('fastp/{fastq}_{run}.fastq.gz', fastq=SAMPLES, run=RUNS),
+		fastqc = expand('{fastqc}/{sample}_{run}_fastqc.html', fastqc=FASTQC, sample=SAMPLES, run=RUNS),
+		fastp  = expand('{fastp}/{sample}_{run}.fastq.gz', fastp=FASTP, sample=SAMPLES, run=RUNS),
 		multiqc = 'multiqc/multiqc_report.html'
 
 rule fastqc:
-	input: 'fastq/{fastq}.fastq.gz'
+	input: INPUT + '/{sample}.fastq.gz'
 	output: 
-		html = 'fastqc/{fastq}_fastqc.html',
-		zip = 'fastqc/{fastq}_fastqc.zip'
-	params: outdir = 'fastqc'
-	conda: 'fastqc.yaml'
+		html = FASTQC + '/{sample}_fastqc.html',
+		zip = FASTQC + '/{sample}_fastqc.zip'
+	params: outdir = FASTQC
+	conda: 'envs/rnaseq.yaml'
 	shell:
 		"""
 		mkdir -p {params.outdir}
@@ -42,16 +52,16 @@ rule fastqc:
 
 rule fastp:
 	input: 
-		r1 = 'fastq/{fastq}_1.fastq.gz',
-		r2 = 'fastq/{fastq}_2.fastq.gz'
+		r1 = INPUT + '/{sample}_1.fastq.gz',
+		r2 = INPUT + '/{sample}_2.fastq.gz'
 	output: 
-		t1   = 'fastp/{fastq}_1.fastq.gz',
-		t2   = 'fastp/{fastq}_2.fastq.gz',
-		html = 'fastp/logs/{fastq}.html',
-		json = 'fastp/logs/{fastq}.fastp.json'
+		t1   = FASTP + '/{sample}_1.fastq.gz',
+		t2   = FASTP + '/{sample}_2.fastq.gz',
+		html = FASTP + '/logs/{sample}.html',
+		json = FASTP + '/logs/{sample}.fastp.json'
 	params: 
-		outdir = 'fastp/logs'
-	conda: 'fastqc.yaml'
+		outdir = FASTP + '/logs'
+	conda: 'envs/rnaseq.yaml'
 	shell:
 		"""
 		mkdir -p {params.outdir}
@@ -63,10 +73,10 @@ rule fastp:
 
 rule multiqc:
 	input: 
-		fastqc = expand('fastqc/{fastq}_{run}_fastqc.html', fastq=SAMPLES, run=RUNS),
-		fastp  = expand('fastp/logs/{fastq}.fastp.json', fastq=SAMPLES)
+		fastqc = expand('{fastqc}/{sample}_{run}_fastqc.html', fastqc=FASTQC, sample=SAMPLES, run=RUNS),
+		fastp  = expand('{fastp}/logs/{sample}.fastp.json', fastp=FASTP, sample=SAMPLES)
 	output: 'multiqc/multiqc_report.html'
-	conda: 'fastqc.yaml'
+	conda: 'envs/rnaseq.yaml'
 	shell:
 		"""
 		mkdir -p multiqc
