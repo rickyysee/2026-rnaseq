@@ -15,6 +15,10 @@ INPUT  = config['INPUT_DIR']
 FASTQC = config['FASTQC_OUT']
 FASTP  = config['FASTP_OUT']
 
+# ensure directories are given, otherwise can run into root directory issues
+if not INPUT or not FASTQC or not FASTP:
+	sys.exit('error: input and output directory names cannot be empty')
+
 # handle emailing if specified
 # --config email='youremail@domain.tld'
 EMAIL = config.get('email', None)
@@ -29,19 +33,22 @@ RUNS = set(RUNS)
 RUNS = list(RUNS)
 RUNS.sort()
 
+# exit if the number of runs found is not 2, which indicates inconsistent naming or SE reads
+if len(RUNS) != 2: sys.exit('error: runs per sample is not 2, please check file naming (should be [sample]_[run].fastq.gz)')
+
 ###
 
 rule all:
 	input:
-		fastqc = expand('{fastqc}/{sample}_{run}_fastqc.html', fastqc=FASTQC, sample=SAMPLES, run=RUNS),
+		# fastqc = expand('{fastqc}/{sample}_{run}_fastqc.html', fastqc=FASTQC, sample=SAMPLES, run=RUNS),
 		fastp  = expand('{fastp}/{sample}_{run}.fastq.gz', fastp=FASTP, sample=SAMPLES, run=RUNS),
 		multiqc = 'multiqc/multiqc_report.html'
 
 rule fastqc:
-	input: INPUT + '/{sample}.fastq.gz'
+	input: INPUT + '/{sample}_{run}.fastq.gz'
 	output: 
-		html = FASTQC + '/{sample}_fastqc.html',
-		zip = FASTQC + '/{sample}_fastqc.zip'
+		html = FASTQC + '/{sample}_{run}_fastqc.html',
+		zip = FASTQC + '/{sample}_{run}_fastqc.zip'
 	params: outdir = FASTQC
 	conda: 'envs/rnaseq.yaml'
 	shell:
@@ -52,11 +59,13 @@ rule fastqc:
 
 rule fastp:
 	input: 
-		r1 = INPUT + '/{sample}_1.fastq.gz',
-		r2 = INPUT + '/{sample}_2.fastq.gz'
+		r1 = INPUT + '/{sample}_' + RUNS[0] + '.fastq.gz',
+		r2 = INPUT + '/{sample}_' + RUNS[1] + '.fastq.gz',
+		zip1 = FASTQC + '/{sample}_' + RUNS[0] + '_fastqc.zip',
+		zip2 = FASTQC + '/{sample}_' + RUNS[1] + '_fastqc.zip',
 	output: 
-		t1   = FASTP + '/{sample}_1.fastq.gz',
-		t2   = FASTP + '/{sample}_2.fastq.gz',
+		t1 = FASTP + '/{sample}_' + RUNS[0] + '.fastq.gz',
+		t2 = FASTP + '/{sample}_' + RUNS[1] + '.fastq.gz',
 		html = FASTP + '/logs/{sample}.html',
 		json = FASTP + '/logs/{sample}.fastp.json'
 	params: 

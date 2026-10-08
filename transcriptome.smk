@@ -36,7 +36,7 @@ RUNS = set(RUNS)
 RUNS = list(RUNS)
 RUNS.sort()
 
-# exit if the number of runs found is not 2, which is 
+# exit if the number of runs found is not 2, which indicates inconsistent naming or SE reads
 if len(RUNS) != 2: sys.exit('error: runs per sample is not 2, please check file naming (should be [sample]_[run].fastq.gz)')
 
 rule all:

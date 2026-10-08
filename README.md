@@ -1,53 +1,57 @@
-#### In summary:
-Genome Mapped to: AalbF3 (now we have it mapped to AalbF5)
-Mapping: TopHat (older, try STAR or HISAT2 now)
-```bash
-tophat -p 20 -o Mapping --library-type fr-firststrand -g 1 --no-discordant --no-mixed
-```
-De novo assembly: Cufflinks (maybe use [transXpress](http://pubmed.ncbi.nlm.nih.gov/37016291/))
-```bash
-cufflinks --library-type fr-firststrand
-```
-De novo annotation: Blast
-```bash
-blastn -outfmt “6 qseqid sseqid qlen slen pident length bitscore” -evalue 1e-3
-```
-Could add:
-- BUSCO (universal benchmark)
-- Bowtie2 (mapping to self)
-- [Trinity](https://github.com/trinityrnaseq/trinityrnaseq/wiki) ("true" de novo assembly without reference genome)
+# Analysis of Transcriptomic Data
 
-It doesn't look like quality filtering/trimming was done, which is probably okay for some mapping algorithms (unsure about TopHat).
+This workflow is meant to standardize and automate the process of analyzing a collection of paired-end RNA-seq files. This workflow is being used to analyze transcriptomic data for Aedes albopictus tarsal and labellar tissue samples but can be applied to other organisms with slight modifications.
+
+## Summary of Workflow
+
+Genome Mapped to: AalbF5
+
+Quality Control: FastQC (0.12.1) and fastp (1.3.6)
+
+Mapping: STAR (2.7.10b)
+
+Transcriptome Assembly: Trinity
+
+Assembly Quality: BUSCO, STAR, ExN50
 
 ### Organizing Files
 
-There is a lot of data to work with, so part of the challenge is simply getting a file structure that works well. Here is what I have currently (9/18/26):
+There is a lot of data to work with, so part of the challenge is simply getting a file structure that works well:
 
 ```bash
 2026-rnaseq
-  ├── envs
-  │   ├── fastqc.yaml
-  │   └── star.yaml
-  ├── Snakefile
+  ├── scripts # scripts to be converted to Snakefiles
+  │   ├── time.py
+  │   ├── aggregate_star.py
+  │   ├── violin.py
+  │   ├── trinity.sh
+  │   ├── index.sh
+  │   ├── counts.sh
+  │   ├── mapping.sh
+  │   └── trinity_guided.sh
+  ├── envs # conda env files
+  │   ├── snakemake.yaml
+  │   ├── plotting.yaml
+  │   └── rnaseq.yaml
+  ├── config.yaml # Snakemake config
+  ├── transcriptome.smk
+  ├── quality.smk
   ├── README.md
-  ├── mapping.sh
-  ├── index.sh
-  ├── .gitignore
 # everything below is untracked
   ├── AalbF5
   │   ├── index (from STAR)
   │   └── mini
   │       └── index (from STAR)
-  ├── fastp -> /media/rcantua/T9/mapping_Aalb5/rnaseq/fastp
+  ├── fastp -> /media/...
   ├── fastqc
-  ├── mapping -> /mnt/data/2026-rnaseq/mapping
+  ├── mapping -> /mnt/...
   ├── multiqc
   └── raw-fastq
-      └── *.fastq.gz -> /media/rcantua/T9/mapping_Aalb5/*fastq.gz
+      └── *.fastq.gz -> /media/...
 
 ```
 
-Notice that many folders are simply symbolic links to other locations because a single mount point is not enough for me to store all this data. In the future, a cluster should be able to accomodate this data; the file hierarchy shouldn't need to change.
+Notice that many folders are simply symbolic links to other locations. It is usually best practice to house raw data at a centralized location and link it to the working directory as needed. Ideally, this centralized location would have all of your data, including outputs, but this is not always possible due to storage constraints.
 
 The `.gitignore` file should be strict, so you have to explicitly include files. This would only be scripts, YAMLs, etc.
 
@@ -59,7 +63,9 @@ The `.gitignore` file should be strict, so you have to explicitly include files.
 !README.md
 !.gitignore
 !Snakefile
-!envs
+!*.smk
+!config.yaml
+!envs/
 !envs/*
 !scripts/
 !scripts/*
@@ -69,7 +75,7 @@ This way, WHAT was done can be saved on GitHub, but the DATA will not be.
 
 ### Quality Control
 
-First, I want to run some quality assessment programs to minimize low quality data.
+First, we will run some quality assessment programs to minimize low quality data.
 
 To this end, I am using `fastqc` and `fastp` for quality reporting and trimming/filtering respectively. These programs produce many log files, which can be aggregated with the `multiqc` program.
 
