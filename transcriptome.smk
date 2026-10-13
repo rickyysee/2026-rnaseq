@@ -31,7 +31,8 @@ if EMAIL:
 
 # search fastq directory all fastq files
 SAMPLES, RUNS = glob_wildcards(os.path.join(INPUT, '{sample}_{run}.fastq.gz'))
-# SAMPLES = ['19_Aalb_leg_NBF_rep1']
+SAMPLES = ['19_Aalb_leg_NBF_rep1','19_Aalb_lab_NBF_rep1']
+
 RUNS = set(RUNS)
 RUNS = list(RUNS)
 RUNS.sort()
@@ -41,18 +42,40 @@ if len(RUNS) != 2: sys.exit('error: runs per sample is not 2, please check file 
 
 rule all:
 	input:
-		mapping = expand('{mapping}/{sample}/Aligned.sortedByCoord.bam', mapping=STAR_OUT, sample=SAMPLES)
+		assembly = os.path.join(TRINITY_OUT, 'Trinity.fasta'),
+		mapping  = expand('{mapping}/{sample}/Aligned.sortedByCoord.out.bam', mapping=STAR_OUT, sample=SAMPLES)
+
+rule assemble:
+	input:
+		r1 = expand('{input}/{sample}_1.fastq.gz', input=INPUT, sample=SAMPLES),
+		r2 = expand('{input}/{sample}_2.fastq.gz', input=INPUT, sample=SAMPLES)
+	output:
+		assembly = os.path.join(TRINITY_OUT, 'Trinity.fasta'),
+		outdir   = directory(TRINITY_OUT)
+	params:
+		r1_list = ','.join(expand('{input}/{sample}_1.fastq.gz', input=INPUT, sample=SAMPLES)),
+		r2_list = ','.join(expand('{input}/{sample}_2.fastq.gz', input=INPUT, sample=SAMPLES))
+	conda: 'envs/rnaseq.yaml'
+	shell:
+		"""
+		Trinity --seqType fq --max_memory 25G \
+		--left {params.r1_list} \
+		--right {params.r2_list} \
+		--CPU {THREADS}
+		--output {output.outdir}
+		"""
 
 rule index:
 	input:
 		genome_fna = GENOME_FNA,
 		genome_gff = GENOME_GFF
 	output:
-		genome_SA  = GENOME_SA
+		genome_SA  = GENOME_SA,
+		index_DIR  = directory(GENOME_IND)
 	conda: 'envs/rnaseq.yaml'
 	shell:
 		"""
-		echo STAR --runMode genomeGenerate --genomeDir {GENOME_IND} \
+		STAR --runMode genomeGenerate --genomeDir {output.index_DIR} \
 		--genomeFastaFiles {input.genome_fna} --sjdbGTFfile {input.genome_gff} \
 		--sjdbOverhang 100 --genomeSAindexNbases 10 --runThreadN {THREADS}
 		"""
@@ -63,14 +86,15 @@ rule mapping:
 		r1 = INPUT + '/{sample}_1.fastq.gz',
 		r2 = INPUT + '/{sample}_2.fastq.gz'
 	output:
-		mapping_dir = STAR_OUT + '/{sample}/',
-		mapping = STAR_OUT + '/{sample}/Aligned.sortedByCoord.bam'
+		mapping_dir = directory(STAR_OUT + '/{sample}'),
+		mapping = STAR_OUT + '/{sample}/Aligned.sortedByCoord.out.bam'
 	conda: 'envs/rnaseq.yaml'
 	shell:
 		"""
-		echo STAR --runMode alignReads --genomeDir {GENOME_IND} \
+		STAR --runMode alignReads --genomeDir {GENOME_IND} \
 		--readFilesIn {input.r1} {input.r2} \
 		--readFilesCommand zcat --outSAMtype BAM SortedByCoordinate \
-		--outFileNamePrefix {output.mapping_dir} \
+		--quantMode GeneCounts \
+		--outFileNamePrefix {output.mapping_dir}/ \
 		--runThreadN {THREADS}
 		"""
