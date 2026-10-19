@@ -42,8 +42,7 @@ if len(RUNS) != 2: sys.exit('error: runs per sample is not 2, please check file 
 
 rule all:
 	input:
-		assembly = os.path.join(TRINITY_OUT, 'Trinity.fasta'),
-		mapping  = expand('{mapping}/{sample}/Aligned.sortedByCoord.out.bam', mapping=STAR_OUT, sample=SAMPLES)
+		assembly = os.path.join(TRINITY_OUT, 'Trinity.fasta')
 
 rule assemble:
 	input:
@@ -63,38 +62,4 @@ rule assemble:
 		--right {params.r2_list} \
 		--CPU {THREADS}
 		--output {output.outdir}
-		"""
-
-rule index:
-	input:
-		genome_fna = GENOME_FNA,
-		genome_gff = GENOME_GFF
-	output:
-		genome_SA  = GENOME_SA,
-		index_DIR  = directory(GENOME_IND)
-	conda: 'envs/rnaseq.yaml'
-	shell:
-		"""
-		STAR --runMode genomeGenerate --genomeDir {output.index_DIR} \
-		--genomeFastaFiles {input.genome_fna} --sjdbGTFfile {input.genome_gff} \
-		--sjdbOverhang 100 --genomeSAindexNbases 10 --runThreadN {THREADS}
-		"""
-
-rule mapping:
-	input:
-		genome_SA = GENOME_SA,
-		r1 = INPUT + '/{sample}_1.fastq.gz',
-		r2 = INPUT + '/{sample}_2.fastq.gz'
-	output:
-		mapping_dir = directory(STAR_OUT + '/{sample}'),
-		mapping = STAR_OUT + '/{sample}/Aligned.sortedByCoord.out.bam'
-	conda: 'envs/rnaseq.yaml'
-	shell:
-		"""
-		STAR --runMode alignReads --genomeDir {GENOME_IND} \
-		--readFilesIn {input.r1} {input.r2} \
-		--readFilesCommand zcat --outSAMtype BAM SortedByCoordinate \
-		--quantMode GeneCounts \
-		--outFileNamePrefix {output.mapping_dir}/ \
-		--runThreadN {THREADS}
 		"""
