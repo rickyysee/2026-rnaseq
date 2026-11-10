@@ -69,6 +69,7 @@ rule mapping:
 		mapping_dir = directory(STAR_OUT + '/{sample}'),
 		mapping = STAR_OUT + '/{sample}/Aligned.sortedByCoord.out.bam'
 	threads: THREADS
+	benchmark: STAR_OUT + '/benchmark/{sample}.tsv'
 	conda: 'envs/rnaseq.yaml'
 	shell:
 		"""
