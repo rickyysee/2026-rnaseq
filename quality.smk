@@ -80,6 +80,16 @@ rule fastp:
 		--detect_adapter_for_pe
 		"""
 
+'''
+rule kraken2_db:
+	output:
+
+rule kraken2:
+	input: 
+		t1 = FASTP + '/{sample}_' + RUNS[0] + '.fastq.gz',
+		t2 = FASTP + '/{sample}_' + RUNS[1] + '.fastq.gz',
+'''
+
 rule multiqc:
 	input: 
 		fastqc = expand('{fastqc}/{sample}_{run}_fastqc.html', fastqc=FASTQC, sample=SAMPLES, run=RUNS),
