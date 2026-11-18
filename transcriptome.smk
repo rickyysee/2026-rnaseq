@@ -9,7 +9,12 @@ requirements: snakemake, conda
 
 import os
 import sys
+from datetime import date
 configfile: 'config.yaml'
+
+# get the current day for file naming
+today = date.today().strftime('%y%m%d')
+
 
 # import configuration variables
 INPUT       = config['FASTP_OUT']
@@ -19,7 +24,7 @@ GENOME_SA   = os.path.join(GENOME_IND, 'SA')
 GENOME_FNA  = os.path.join(GENOME_DIR, config['GENOME_FNA'])
 GENOME_GFF  = os.path.join(GENOME_DIR, config['GENOME_GFF'])
 STAR_OUT    = config['STAR_OUT']
-TRINITY_OUT = config['TRINITY_OUT']
+TRINITY_OUT = os.path.join(config['TRINITY_OUT'], today + '_trinity')
 THREADS     = config['THREADS']
 
 # handle emailing if specified
@@ -60,6 +65,29 @@ rule assemble:
 		Trinity --seqType fq --max_memory 25G \
 		--left {params.r1_list} \
 		--right {params.r2_list} \
-		--CPU {THREADS}
-		--output {output.outdir}
+		--CPU {THREADS} \
+		--output {output.outdir} \
+		--full_cleanup
 		"""
+
+rule self_map:
+	input: 
+		r1 = expand('{input}/{sample}_1.fastq.gz', input=INPUT, sample=SAMPLES),
+		r2 = expand('{input}/{sample}_2.fastq.gz', input=INPUT, sample=SAMPLES),
+		assembly = os.path.join(TRINITY_OUT, 'Trinity.fasta'),
+	output: 
+		stats = os.path.join(TRINITY_OUT, '{sample}_align_stats.txt'),
+		bam = os.path.join(TRINITY_OUT, '{sample}_bowtie2.bam')
+	conda: 'envs/rnaseq.yaml'
+	shell:
+		"""
+		time bowtie2 -p 4 -q --no-unal -k 20 \
+		-x {input.assembly} \
+		-1 {input.r1} \
+		-2 {input.r2} \
+		2>{output.stats} | samtools view -@3 -Sb -o {output.bam}
+		"""
+
+rule busco:
+	
+

@@ -13,3 +13,4 @@ dependencies:
   - fastp=1.3.6
   - trinity=2.5.1
   - kraken2=2.17.2
+  - busco=6.1.0
